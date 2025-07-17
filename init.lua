@@ -240,7 +240,6 @@ vim.opt.rtp:prepend(lazypath)
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
@@ -467,9 +466,29 @@ require('lazy').setup({
       },
     },
   },
+
+  {
+    'mrcjkb/rustaceanvim',
+    version = '^6', -- Recommended
+    lazy = false, -- This plugin is already lazy
+    ['rust-analyzer'] = {
+      cargo = {
+        allFeatures = true,
+      },
+    },
+  },
+
   {
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',
+    opts = {
+      setup = {
+        rust_analyzer = function()
+          return true
+        end,
+      },
+    },
+
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
       -- Mason must be loaded before its dependents so we need to set it up here.
@@ -663,9 +682,9 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -709,12 +728,24 @@ require('lazy').setup({
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
+
+      require('lspconfig').rust_analyzer.setup {
+        settings = {
+          ['rust-analyzer'] = {
+            checkOnSave = {
+              command = 'check', -- change from "clippy" to "check"
+            },
+          },
+        },
+      }
+
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
         automatic_installation = false,
         handlers = {
+          rust_analyzer = function() end,
           function(server_name)
             local server = servers[server_name] or {}
             -- This handles overriding only values explicitly passed
@@ -873,6 +904,7 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+    -- 'folke/tokyonight.nvim',
     'folke/tokyonight.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     config = function()
@@ -887,6 +919,25 @@ require('lazy').setup({
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
       vim.cmd.colorscheme 'tokyonight-night'
+    end,
+  },
+  {
+    'sainnhe/gruvbox-material',
+    enabled = true,
+    priority = 1000,
+    config = function()
+      vim.g.gruvbox_material_transparent_background = 0
+      vim.g.gruvbox_material_foreground = 'mix'
+      vim.g.gruvbox_material_background = 'hard'
+      vim.g.gruvbox_material_ui_contrast = 'high'
+      vim.g.gruvbox_material_float_style = 'bright'
+      vim.g.gruvbox_material_statusline_style = 'material'
+      vim.g.gruvbox_material_cursor = 'auto'
+
+      -- vim.g.gruvbox_material_colors_override = { bg0 = '#16181A' } -- #0e1010
+      -- vim.g.gruvbox_material_better_performance = 1
+
+      -- vim.cmd.colorscheme 'gruvbox-material'
     end,
   },
 
@@ -956,6 +1007,8 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
+  { 'vuciv/golf' },
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -968,8 +1021,8 @@ require('lazy').setup({
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
   -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
@@ -982,6 +1035,36 @@ require('lazy').setup({
   -- Or use telescope!
   -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
   -- you can continue same window with `<space>sr` which resumes last telescope search
+  {
+    'jinh0/eyeliner.nvim',
+    config = function()
+      require('eyeliner').setup {
+        -- show highlights only after keypress
+        highlight_on_key = true,
+
+        -- dim all other characters if set to true (recommended!)
+        dim = false,
+
+        -- set the maximum number of characters eyeliner.nvim will check from
+        -- your current cursor position; this is useful if you are dealing with
+        -- large files: see https://github.com/jinh0/eyeliner.nvim/issues/41
+        max_length = 9999,
+
+        -- filetypes for which eyeliner should be disabled;
+        -- e.g., to disable on help files:
+        -- disabled_filetypes = {"help"}
+        disabled_filetypes = {},
+
+        -- buftypes for which eyeliner should be disabled
+        -- e.g., disabled_buftypes = {"nofile"}
+        disabled_buftypes = {},
+
+        -- add eyeliner to f/F/t/T keymaps;
+        -- see section on advanced configuration for more information
+        default_keymaps = true,
+      }
+    end,
+  },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
